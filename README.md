@@ -1,16 +1,18 @@
 # Zoho Exporter
 
-Utilities for exporting and transforming Zoho-related data.
+Small utilities for exporting and transforming Zoho-related data.
 
 This repository currently contains:
-- a CSV processing script for extracting HTML sidecar files or generating JSON
-- a Zoho OAuth token helper
-- a small shell loop for batch processing CSV files
+- `extract_from_csv.py` for converting CSV exports into HTML sidecar files or JSON
+- `get_tokens.py` for exchanging a Zoho OAuth authorization code for tokens
+- `loop.sh` for batch-running the CSV conversion script over a local directory
 
 ## Requirements
 
 - Python 3.10+
 - No third-party Python packages are required for the current scripts
+
+> `requirements.txt` is informational only. The current code uses the Python standard library.
 
 ## Repository contents
 
@@ -202,8 +204,11 @@ Current behavior:
 bash loop.sh
 ```
 
+#### Note
+
+`loop.sh` uses a hard-coded local filesystem path, so it may need adjustment before use on another machine.
+
 ## Notes
 
-- `requirements.txt` currently documents that no external dependencies are required.
 - `download_imgs.py` is not present in the repository and is therefore intentionally not documented here.
 - This README is aligned to the repository's current code and avoids changing functionality.
