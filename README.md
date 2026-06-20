@@ -44,6 +44,21 @@ and prints the full token response plus:
 - `access_token`
 - `refresh_token`
 
+#### Config file
+
+To avoid retyping `client_id` and `client_secret` every run, create a
+`zoho_exporter.ini` file either in the **current working directory** or in
+your **home directory** (`~/zoho_exporter.ini`):
+
+```ini
+[zoho]
+client_id     = your_client_id_here
+client_secret = your_client_secret_here
+```
+
+When the file is present the prompts show the stored values as defaults in
+brackets — press **Enter** to accept them or type a new value to override.
+
 ### Options
 
 - `--input`, `-i`: Input CSV file path (default: `data/Threads__10.csv`)
