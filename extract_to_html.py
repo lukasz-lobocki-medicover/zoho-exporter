@@ -28,7 +28,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Thread {thread_id}</title>
+    <title>{thread_title}</title>
 </head>
 <body>
 {thread_content}
@@ -153,6 +153,7 @@ def process_csv_html(args):
                 # Get thread ID and content
                 thread_id = row.get(args.id_column)
                 thread_content = row.get(args.content_column)
+                ticket_id = row.get("Ticket id")
                 
                 # Skip if ID is missing
                 if thread_id is None or str(thread_id).strip() == "":
@@ -160,6 +161,12 @@ def process_csv_html(args):
                 
                 # Convert ID to string
                 thread_id_str = str(thread_id).strip()
+                ticket_id_str = str(ticket_id).strip() if ticket_id is not None else ""
+                thread_title = (
+                    f"Thread {thread_id_str} - Ticket {ticket_id_str}"
+                    if ticket_id_str
+                    else f"Thread {thread_id_str}"
+                )
                 
                 # Handle empty content
                 if thread_content is None or str(thread_content).strip() == "":
@@ -169,7 +176,7 @@ def process_csv_html(args):
                 
                 # Create HTML content (preserve original without escaping)
                 html_content = HTML_TEMPLATE.format(
-                    thread_id=thread_id_str,
+                    thread_title=thread_title,
                     thread_content=str(thread_content) if thread_content is not None else ""
                 )
                 

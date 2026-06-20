@@ -74,7 +74,7 @@ json_output/
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Thread {id}</title>
+    <title>Thread {id} - Ticket {ticket_id}</title>
 </head>
 <body>
 {thread_content}
