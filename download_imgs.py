@@ -23,6 +23,8 @@ from urllib.parse import urlparse
 
 ORG_ID = "20067925477"
 TOKENS_FILENAME = "zoho_exporter.txt"
+IMG_TAG_PATTERN = re.compile(r"<img\b[^>]*\bsrc\s*=\s*([\"'])([^\"']+)\1[^>]*>", re.IGNORECASE)
+SRC_ATTR_PATTERN = re.compile(r"\bsrc\s*=\s*([\"'])([^\"']+)\1", re.IGNORECASE)
 
 
 def load_access_token() -> str:
@@ -93,17 +95,17 @@ def process_html_file(html_file: Path, access_token: str) -> int:
     images_dir.mkdir(exist_ok=True)
 
     updated = 0
+    found = 0
 
     def replace_img(img_match: re.Match) -> str:
-        nonlocal updated
+        nonlocal updated, found
         tag = img_match.group(0)
+        src_url = img_match.group(2)
+        found += 1
+        logging.debug("Found <img> src in %s: %s", html_file, src_url)
 
-        src_match = re.search(r'src=(["\'])([^"\']+)\1', tag, re.IGNORECASE)
-        if not src_match:
-            return tag
-
-        src_url = src_match.group(2)
         if not src_url.startswith(("http://", "https://")):
+            logging.debug("Skipping non-remote image in %s: %s", html_file, src_url)
             return tag
 
         dest = sidecar_path(src_url, images_dir)
@@ -115,15 +117,19 @@ def process_html_file(html_file: Path, access_token: str) -> int:
             if not download_image(src_url, dest, access_token):
                 return tag
 
-        # Build relative POSIX path from the HTML file's directory
-        rel = dest.relative_to(html_file.parent).as_posix()
+        src_match = SRC_ATTR_PATTERN.search(tag)
+        if not src_match:
+            logging.warning("Matched <img> tag without replaceable src in %s: %s", html_file, tag)
+            return tag
 
-        # Replace only the URL value inside the src attribute, preserving quotes
+        rel = dest.relative_to(html_file.parent).as_posix()
         new_tag = tag[: src_match.start(2)] + rel + tag[src_match.end(2):]
         updated += 1
         return new_tag
 
-    new_content = re.sub(r"<img\b[^>]*>", replace_img, content, flags=re.IGNORECASE)
+    logging.info("Searching for <img> tags with src in %s", html_file)
+    new_content = IMG_TAG_PATTERN.sub(replace_img, content)
+    logging.info("Found %d <img> tag(s) with src in %s", found, html_file)
 
     if new_content != content:
         html_file.write_text(new_content, encoding="utf-8")
