@@ -2,6 +2,7 @@ zoho_exporter.txt
 zoho_exporter.ini
 data/
 output/
+tst/
 
 __pycache__/
 *.pyc
