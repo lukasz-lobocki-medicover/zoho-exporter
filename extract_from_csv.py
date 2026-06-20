@@ -134,6 +134,7 @@ def process_csv_html(args, input_file):
     try:
         # Open and read CSV file
         with open(input_file, 'r', encoding='utf-8', errors='replace', newline='') as csvfile:
+            next(csvfile)  # skip first line
             reader = csv.DictReader(csvfile, quotechar='"', delimiter=',')
             
             # Check if required columns exist
@@ -258,6 +259,7 @@ def process_csv_json(args, input_file):
     try:
         # Open and read CSV file
         with open(input_file, 'r', encoding='utf-8', errors='replace', newline='') as csvfile:
+            next(csvfile)  # skip first line
             reader = csv.DictReader(csvfile, quotechar='"', delimiter=',')
             
             # Check if content column exists
