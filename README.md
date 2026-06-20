@@ -5,7 +5,6 @@ Utilities for exporting and transforming Zoho-related data.
 This repository currently contains:
 - a CSV processing script for extracting HTML sidecar files or generating JSON
 - a Zoho OAuth token helper
-- a Zoho Desk ticket download helper
 - a small shell loop for batch processing CSV files
 
 ## Requirements
@@ -158,30 +157,9 @@ What it does:
 python get_tokens.py
 ```
 
-### `download_imgs.py`
-
-Despite the filename, this script currently performs token exchange and then downloads Zoho Desk tickets as JSON.
-It does not document or implement image downloading in the current version.
-
-What it does:
-- prompts for `client_id`
-- prompts for `client_secret`
-- prompts for `code`
-- sends a `POST` request to `https://accounts.zoho.eu/oauth/v2/token`
-- prints the returned JSON response
-- saves `access_token` and `refresh_token` to `tokens.txt`
-- uses the access token to call `https://desk.zoho.eu/api/v1/tickets`
-- saves the returned response to `tickets.json`
-
-#### Usage
-
-```bash
-python download_imgs.py
-```
-
 ### Shared Zoho configuration
 
-Both `get_tokens.py` and `download_imgs.py` look for a config file named `zoho_exporter.ini` in one of these locations:
+`get_tokens.py` looks for a config file named `zoho_exporter.ini` in one of these locations:
 - `./zoho_exporter.ini`
 - `~/.zoho_exporter.ini`
 
@@ -196,11 +174,11 @@ client_secret = your_client_secret_here
 If a valid `[zoho]` section is present, the stored credentials are shown as prompt defaults.
 You can press `Enter` to reuse them or type replacements.
 
-### Output files created by the Zoho scripts
+### Output files created by the Zoho helper
 
 #### `tokens.txt`
 
-Written by both `get_tokens.py` and `download_imgs.py`.
+Written by `get_tokens.py`.
 
 Format:
 
@@ -208,12 +186,6 @@ Format:
 access_token=...
 refresh_token=...
 ```
-
-#### `tickets.json`
-
-Written by `download_imgs.py` after a successful tickets request.
-
-The file contains the pretty-printed JSON response returned by the Zoho Desk tickets API.
 
 ### `loop.sh`
 
@@ -232,6 +204,6 @@ bash loop.sh
 
 ## Notes
 
-- `ORG_ID` is hard-coded in the Zoho scripts.
 - `requirements.txt` currently documents that no external dependencies are required.
+- `download_imgs.py` is not present in the repository and is therefore intentionally not documented here.
 - This README is aligned to the repository's current code and avoids changing functionality.
