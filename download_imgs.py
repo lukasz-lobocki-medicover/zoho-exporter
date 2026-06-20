@@ -22,7 +22,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 ORG_ID = "20067925477"
-TOKENS_FILENAME = "tokens.txt"
+TOKENS_FILENAME = "zoho_exporter.txt"
 
 
 def load_access_token() -> str:
