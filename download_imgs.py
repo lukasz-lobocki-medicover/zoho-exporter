@@ -13,18 +13,20 @@ Usage:
 
 import argparse
 import hashlib
+import html as html_mod
 import logging
 import re
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 ORG_ID = "20067925477"
 TOKENS_FILENAME = "zoho_exporter.txt"
+ZOHO_BASE_URL = "https://desk.zoho.com"
 IMG_TAG_PATTERN = re.compile(r"<img\b(?=[^>]*\bsrc\s*=)[^>]*>", re.IGNORECASE)
-SRC_ATTR_PATTERN = re.compile(r"\bsrc\s*=\s*(?:(?P<quote>[\"'])(?P<quoted>[^\"']+) (?P=quote)|(?P<unquoted>[^\s>]+))", re.IGNORECASE)
+SRC_ATTR_PATTERN = re.compile(r"\bsrc\s*=\s*(?:(?P<quote>[\"'])(?P<quoted>[^\"']+)(?P=quote)|(?P<unquoted>[^\s>]+))", re.IGNORECASE)
 
 
 def load_access_token() -> str:
@@ -53,7 +55,12 @@ def sidecar_path(url: str, images_dir: Path) -> Path:
     suffix = Path(parsed.path).suffix
     # Keep only safe, short extensions; fall back to .bin
     if not suffix or len(suffix) > 8 or not suffix[1:].isalnum():
-        suffix = ".bin"
+        # Zoho inline-image URLs encode the filename in the 'f' query parameter
+        f_values = parse_qs(parsed.query).get("f", [])
+        if f_values:
+            suffix = Path(f_values[0]).suffix
+        if not suffix or len(suffix) > 8 or not suffix[1:].isalnum():
+            suffix = ".bin"
     return images_dir / f"{url_hash}{suffix}"
 
 
@@ -83,7 +90,7 @@ def download_image(url: str, dest: Path, access_token: str) -> bool:
     return False
 
 
-def process_html_file(html_file: Path, access_token: str) -> int:
+def process_html_file(html_file: Path, access_token: str, base_url: str = ZOHO_BASE_URL) -> int:
     """Download remote images in html_file and rewrite their src attributes.
 
     Returns the number of images that were successfully downloaded or
@@ -105,21 +112,28 @@ def process_html_file(html_file: Path, access_token: str) -> int:
             logging.warning("Matched <img> tag without replaceable src in %s: %s", html_file, tag)
             return tag
 
-        src_url = src_match.group("quoted") or src_match.group("unquoted") or ""
+        src_raw = src_match.group("quoted") or src_match.group("unquoted") or ""
+        # Decode HTML entities (e.g. &amp; → &) before treating as a URL
+        src_decoded = html_mod.unescape(src_raw)
         found += 1
-        logging.debug("Found <img> src in %s: %s", html_file, src_url)
+        logging.debug("Found <img> src in %s: %s", html_file, src_decoded)
 
-        if not src_url.startswith(("http://", "https://")):
-            logging.debug("Skipping non-remote image in %s: %s", html_file, src_url)
+        if src_decoded.startswith(("http://", "https://")):
+            download_url = src_decoded
+        elif src_decoded.startswith("/"):
+            # Relative Zoho API path — prepend the portal base URL
+            download_url = base_url.rstrip("/") + src_decoded
+        else:
+            logging.debug("Skipping non-remote image in %s: %s", html_file, src_decoded)
             return tag
 
-        dest = sidecar_path(src_url, images_dir)
+        dest = sidecar_path(download_url, images_dir)
 
         if dest.exists():
             logging.debug("Cached: %s", dest.name)
         else:
-            logging.info("Downloading: %s", src_url)
-            if not download_image(src_url, dest, access_token):
+            logging.info("Downloading: %s", download_url)
+            if not download_image(download_url, dest, access_token):
                 return tag
 
         rel = dest.relative_to(html_file.parent).as_posix()
@@ -155,6 +169,11 @@ def main() -> None:
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         help="Logging verbosity (default: INFO)",
     )
+    parser.add_argument(
+        "--base-url",
+        default=ZOHO_BASE_URL,
+        help=f"Zoho portal base URL prepended to relative /api/ image paths (default: {ZOHO_BASE_URL})",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -185,7 +204,7 @@ def main() -> None:
     total = 0
     for html_file in html_files:
         logging.info("Processing: %s", html_file)
-        total += process_html_file(html_file, access_token)
+        total += process_html_file(html_file, access_token, args.base_url)
 
     logging.info("Done. Total images downloaded/updated: %d", total)
 
