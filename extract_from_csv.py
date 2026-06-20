@@ -100,6 +100,23 @@ def create_directories(output_dir, mode):
         return output_path, None
 
 
+def resolve_column_name(fieldnames, requested_name, *, case_insensitive=False):
+    """Resolve a column name from CSV headers, optionally case-insensitively."""
+    if not fieldnames:
+        return None
+
+    if requested_name in fieldnames:
+        return requested_name
+
+    if case_insensitive:
+        requested_lower = requested_name.casefold()
+        for fieldname in fieldnames:
+            if fieldname is not None and fieldname.casefold() == requested_lower:
+                return fieldname
+
+    return None
+
+
 def process_csv_html(args, input_file):
     """Process CSV file and extract thread content to HTML files."""
     input_file = Path(input_file)
@@ -137,8 +154,14 @@ def process_csv_html(args, input_file):
             next(csvfile)  # skip first line
             reader = csv.DictReader(csvfile, quotechar='"', delimiter=',')
             
+            resolved_id_column = resolve_column_name(
+                reader.fieldnames,
+                args.id_column,
+                case_insensitive=(args.id_column == DEFAULT_ID_COLUMN),
+            )
+
             # Check if required columns exist
-            if args.id_column not in reader.fieldnames:
+            if resolved_id_column is None:
                 print(f"Error: ID column '{args.id_column}' not found in CSV")
                 print(f"Available columns: {reader.fieldnames}")
                 sys.exit(1)
@@ -153,7 +176,7 @@ def process_csv_html(args, input_file):
                 total_rows += 1
                 
                 # Get thread ID and content
-                thread_id = row.get(args.id_column)
+                thread_id = row.get(resolved_id_column)
                 thread_content = row.get(args.content_column)
                 ticket_id = row.get("Ticket id")
                 
