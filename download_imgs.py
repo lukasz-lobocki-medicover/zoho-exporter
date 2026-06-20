@@ -1,18 +1,55 @@
 #!/usr/bin/env python3
 
+import configparser
 import json
 import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 
 TOKEN_URL = "https://accounts.zoho.eu/oauth/v2/token"
+CONFIG_FILENAME = "zoho_exporter.ini"
+CONFIG_SECTION = "zoho"
+
+
+def load_config() -> configparser.SectionProxy | None:
+    """Load config from ./zoho_exporter.ini or ~/.zoho_exporter.ini.
+
+    Returns the [zoho] section proxy, or None if no valid config is found.
+    """
+    candidates = [
+        Path(CONFIG_FILENAME),
+        Path.home() / CONFIG_FILENAME,
+    ]
+    config = configparser.ConfigParser()
+    for path in candidates:
+        if path.is_file():
+            try:
+                config.read(path, encoding="utf-8")
+                if config.has_section(CONFIG_SECTION):
+                    return config[CONFIG_SECTION]
+            except configparser.Error:
+                pass
+    return None
+
+
+def prompt_with_default(prompt: str, default: str) -> str:
+    """Prompt the user, showing *default* in brackets; return default on empty input."""
+    if default:
+        value = input(f"{prompt} [{default}]: ").strip()
+        return value if value else default
+    return input(f"{prompt}: ").strip()
 
 
 def main():
-    client_id = input("Enter client_id: ").strip()
-    client_secret = input("Enter client_secret: ").strip()
+    cfg = load_config()
+    default_id = cfg.get("client_id", "") if cfg else ""
+    default_secret = cfg.get("client_secret", "") if cfg else ""
+
+    client_id = prompt_with_default("Enter client_id", default_id)
+    client_secret = prompt_with_default("Enter client_secret", default_secret)
     code = input("Enter code: ").strip()
 
     data = urllib.parse.urlencode(
