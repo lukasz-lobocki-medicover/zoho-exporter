@@ -24,6 +24,26 @@ This script processes large CSV files (designed for 3M+ rows, 400MB+) and can ei
 python extract_from_csv.py [options]
 ```
 
+### Zoho OAuth Token Script (`download_imgs`)
+
+Run:
+
+```bash
+./download_imgs
+```
+
+The script will prompt for:
+- `client_id`
+- `client_secret`
+- `code`
+
+Then it sends a POST request to:
+`https://accounts.zoho.eu/oauth/v2/token`
+
+and prints the full token response plus:
+- `access_token`
+- `refresh_token`
+
 ### Options
 
 - `--input`, `-i`: Input CSV file path (default: `data/Threads__10.csv`)
