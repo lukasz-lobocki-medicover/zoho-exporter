@@ -144,8 +144,9 @@ def process_csv_html(args, input_file):
                 sys.exit(1)
             content_column_present = args.content_column in reader.fieldnames
             if not content_column_present:
-                print(f"Warning: Content column '{args.content_column}' not found in CSV — content will be empty")
+                print(f"Warning: Content column '{args.content_column}' not found in CSV — no HTML files or manifest entries will be created")
                 print(f"Available columns: {reader.fieldnames}")
+                return 0
             
             # Process each row
             for row in reader:
@@ -153,7 +154,7 @@ def process_csv_html(args, input_file):
                 
                 # Get thread ID and content
                 thread_id = row.get(args.id_column)
-                thread_content = row.get(args.content_column) if content_column_present else None
+                thread_content = row.get(args.content_column)
                 ticket_id = row.get("Ticket id")
                 
                 # Skip if ID is missing
