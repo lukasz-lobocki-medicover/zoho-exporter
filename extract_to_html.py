@@ -188,7 +188,10 @@ def process_csv_html(args):
                     f.write(html_content)
                 
                 # Add to manifest
-                manifest[thread_id_str] = f"html/{html_filename}"
+                manifest[thread_id_str] = {
+                    "html_path": f"html/{html_filename}",
+                    "Ticket id": ticket_id_str,
+                }
                 
                 processed_rows += 1
                 
