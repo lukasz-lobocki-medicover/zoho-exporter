@@ -2,7 +2,7 @@
 """
 CSV to HTML Extraction and JSON Transformation Script
 
-This script processes large CSV files and either:
+This script processes all CSV files found in an input directory and either:
 1. Extracts thread content into separate HTML files (default)
 2. Transforms all columns except content column into JSON format
 
@@ -10,10 +10,10 @@ It's designed to handle CSV files with 3M+ rows efficiently using built-in Pytho
 
 Usage:
     # Extract thread content to HTML
-    python extract_from_csv.py [--input FILE] [--output-dir DIR] [--id-column NAME] [--content-column NAME]
+    python extract_from_csv.py [--input-dir DIR] [--output-dir DIR] [--id-column NAME] [--content-column NAME]
 
     # Transform to JSON (excluding content column)
-    python extract_from_csv.py --mode json [--input FILE] [--output-dir DIR] [--content-column NAME]
+    python extract_from_csv.py --mode json [--input-dir DIR] [--output-dir DIR] [--content-column NAME]
 """
 
 import argparse
@@ -52,9 +52,9 @@ def parse_arguments():
         description="Extract thread content from CSV files to HTML or transform to JSON format"
     )
     parser.add_argument(
-        "--input", "-i",
-        default="data/Threads__10.csv",
-        help="Input CSV file path (default: data/Threads__10.csv)"
+        "--input-dir", "-i",
+        default="data",
+        help="Input directory containing CSV files (default: data)"
     )
     parser.add_argument(
         "--output-dir", "-o",
@@ -100,9 +100,9 @@ def create_directories(output_dir, mode):
         return output_path, None
 
 
-def process_csv_html(args):
+def process_csv_html(args, input_file):
     """Process CSV file and extract thread content to HTML files."""
-    input_file = Path(args.input)
+    input_file = Path(input_file)
     output_path, html_path = create_directories(args.output_dir, "html")
     
     # Verify input file exists
@@ -227,9 +227,9 @@ def process_csv_html(args):
     return processed_rows
 
 
-def process_csv_json(args):
+def process_csv_json(args, input_file):
     """Process CSV file and transform to JSON format (excluding content column)."""
-    input_file = Path(args.input)
+    input_file = Path(input_file)
     output_path, _ = create_directories(args.output_dir, "json")
     
     # Verify input file exists
@@ -306,11 +306,25 @@ def process_csv_json(args):
 def main():
     """Main entry point."""
     args = parse_arguments()
-    
-    if args.mode == "html":
-        process_csv_html(args)
-    else:
-        process_csv_json(args)
+
+    input_dir = Path(args.input_dir)
+    if not input_dir.is_dir():
+        print(f"Error: Input directory '{input_dir}' not found or is not a directory")
+        sys.exit(1)
+
+    csv_files = sorted(input_dir.glob("*.csv"))
+    if not csv_files:
+        print(f"No CSV files found in '{input_dir}'")
+        sys.exit(1)
+
+    print(f"Found {len(csv_files)} CSV file(s) in '{input_dir}'")
+
+    for csv_file in csv_files:
+        print(f"\n{'='*60}")
+        if args.mode == "html":
+            process_csv_html(args, csv_file)
+        else:
+            process_csv_json(args, csv_file)
 
 
 if __name__ == "__main__":
