@@ -37,8 +37,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 # Default column names
-DEFAULT_ID_COLUMN = "ID"
-DEFAULT_CONTENT_COLUMN = "Thread Content"
+DEFAULT_ID_COLUMN = "id"
+DEFAULT_CONTENT_COLUMN = "summary"
 
 # Output directories
 DEFAULT_OUTPUT_DIR = Path("output")
