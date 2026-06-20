@@ -181,7 +181,7 @@ def process_csv_html(args, input_file):
                 # Get thread ID and content
                 thread_id = row.get(resolved_id_column)
                 thread_content = row.get(args.content_column)
-                ticket_id = row.get("Ticket id")
+                ticket_id = row.get("ticketId")
                 
                 # Skip if ID is missing
                 if thread_id is None or str(thread_id).strip() == "":
