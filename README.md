@@ -208,7 +208,59 @@ bash loop.sh
 
 `loop.sh` uses a hard-coded local filesystem path, so it may need adjustment before use on another machine.
 
+### `download_imgs.py`
+
+Downloads all remote images referenced in `<img src="...">` tags inside
+HTML files and rewrites each `src` attribute to point to the locally saved
+sidecar file.
+
+What it does:
+- reads `access_token` from `tokens.txt` and prompts the user (default shown in brackets)
+- scans every `.html` file under the given input directory (recursive)
+- for each remote image URL found in an `<img>` tag, calls `curl` with the
+  Zoho Desk API auth headers to download the image
+- saves each image under an `images/` subdirectory next to the HTML file,
+  naming the file by the MD5 hash of the URL
+- rewrites the `src` attribute in the HTML file to the relative local path
+- skips images that have already been downloaded (cached by filename)
+
+#### Usage
+
+```bash
+python download_imgs.py [--input-dir DIR]
+```
+
+#### Options
+
+- `--input-dir`, `-i`: Directory containing HTML files (default: `output/html`)
+
+#### Example
+
+```bash
+# Process all HTML files under output/html
+python download_imgs.py
+
+# Process a custom directory
+python download_imgs.py --input-dir /path/to/html/files
+```
+
+#### Output structure
+
+```text
+output/html/
+└── Threads__10/
+    ├── 12345.html          ← img src attributes updated to local paths
+    └── images/
+        ├── a1b2c3d4....jpg
+        └── e5f6a7b8....png
+```
+
+#### Notes
+
+- `tokens.txt` is read for the default `access_token`; create it with `get_tokens.py`.
+- The `orgId` header is hard-coded to `20067925477`.
+- Images already present in the `images/` directory are not re-downloaded.
+
 ## Notes
 
-- `download_imgs.py` is not present in the repository and is therefore intentionally not documented here.
 - This README is aligned to the repository's current code and avoids changing functionality.
