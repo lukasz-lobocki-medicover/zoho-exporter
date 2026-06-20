@@ -1,0 +1,8 @@
+# No external dependencies required
+# Uses only Python standard library modules:
+# - argparse (command line argument parsing)
+# - csv (CSV file reading)
+# - html (HTML character escaping)
+# - json (manifest generation)
+# - pathlib (file path handling)
+# - time (performance tracking)
