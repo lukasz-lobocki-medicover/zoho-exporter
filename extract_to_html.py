@@ -163,7 +163,7 @@ def process_csv_html(args):
                 thread_id_str = str(thread_id).strip()
                 ticket_id_str = str(ticket_id).strip() if ticket_id is not None else ""
                 thread_title = (
-                    f"Thread {thread_id_str} - Ticket {ticket_id_str}"
+                    f"ThreadID {thread_id_str} - TicketID {ticket_id_str}"
                     if ticket_id_str
                     else f"Thread {thread_id_str}"
                 )
