@@ -13,9 +13,11 @@ Usage:
 
 import argparse
 import hashlib
+import logging
 import re
-import subprocess
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -54,24 +56,29 @@ def sidecar_path(url: str, images_dir: Path) -> Path:
 
 
 def download_image(url: str, dest: Path, access_token: str) -> bool:
-    """Download a single image via curl with Zoho auth headers.
+    """Download a single image via urllib with Zoho auth headers.
 
     Returns True on success, False on failure.
     """
-    cmd = [
-        "curl", "-s", "-f",
-        "-X", "GET", url,
-        "-H", f"orgId:{ORG_ID}",
-        "-H", f"Authorization:Zoho-oauthtoken {access_token}",
-        "-o", str(dest),
-    ]
-    result = subprocess.run(cmd, capture_output=True)
-    if result.returncode != 0:
-        stderr = result.stderr.decode(errors="replace").strip()
-        print(f"  Warning: failed to download {url} (exit {result.returncode})"
-              + (f": {stderr}" if stderr else ""))
-        return False
-    return True
+    req = urllib.request.Request(
+        url,
+        headers={
+            "orgId": ORG_ID,
+            "Authorization": f"Zoho-oauthtoken {access_token}",
+        },
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(req) as response:
+            dest.write_bytes(response.read())
+        return True
+    except urllib.error.HTTPError as exc:
+        logging.warning("Failed to download %s (HTTP %s %s)", url, exc.code, exc.reason)
+    except urllib.error.URLError as exc:
+        logging.warning("Failed to download %s: %s", url, exc.reason)
+    except OSError as exc:
+        logging.warning("Failed to save %s to %s: %s", url, dest, exc)
+    return False
 
 
 def process_html_file(html_file: Path, access_token: str) -> int:
@@ -102,9 +109,9 @@ def process_html_file(html_file: Path, access_token: str) -> int:
         dest = sidecar_path(src_url, images_dir)
 
         if dest.exists():
-            print(f"  Cached: {dest.name}")
+            logging.debug("Cached: %s", dest.name)
         else:
-            print(f"  Downloading: {src_url}")
+            logging.info("Downloading: %s", src_url)
             if not download_image(src_url, dest, access_token):
                 return tag
 
@@ -136,33 +143,45 @@ def main() -> None:
         default="output/html",
         help="Directory containing HTML files to process (default: output/html)",
     )
+    parser.add_argument(
+        "--log-level",
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Logging verbosity (default: INFO)",
+    )
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format="%(asctime)s %(levelname)s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S",
+    )
 
     input_dir = Path(args.input_dir)
     if not input_dir.is_dir():
-        print(f"Error: input directory '{input_dir}' not found or is not a directory")
+        logging.error("Input directory '%s' not found or is not a directory", input_dir)
         sys.exit(1)
 
     default_token = load_access_token()
     access_token = prompt_with_default("Enter access_token", default_token)
 
     if not access_token:
-        print("Error: access_token is required")
+        logging.error("access_token is required")
         sys.exit(1)
 
     html_files = sorted(input_dir.rglob("*.html"))
     if not html_files:
-        print(f"No HTML files found in '{input_dir}'")
+        logging.info("No HTML files found in '%s'", input_dir)
         sys.exit(0)
 
-    print(f"Found {len(html_files)} HTML file(s) in '{input_dir}'")
+    logging.info("Found %d HTML file(s) in '%s'", len(html_files), input_dir)
 
     total = 0
     for html_file in html_files:
-        print(f"\nProcessing: {html_file}")
+        logging.info("Processing: %s", html_file)
         total += process_html_file(html_file, access_token)
 
-    print(f"\nDone. Total images downloaded/updated: {total}")
+    logging.info("Done. Total images downloaded/updated: %d", total)
 
 
 if __name__ == "__main__":
