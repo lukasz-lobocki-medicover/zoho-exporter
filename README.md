@@ -86,8 +86,14 @@ json_output/
 
 ```json
 {
-  "12345": "html/12345.html",
-  "12346": "html/12346.html",
+  "12345": {
+    "html_path": "html/12345.html",
+    "Ticket id": "12345"
+  },
+  "12346": {
+    "html_path": "html/12346.html",
+    "Ticket id": "12346"
+  },
   ...
 }
 ```
