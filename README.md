@@ -29,7 +29,7 @@ python extract_from_csv.py [options]
 Run:
 
 ```bash
-./download_imgs
+python download_imgs.py
 ```
 
 The script will prompt for:
