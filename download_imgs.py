@@ -24,7 +24,7 @@ from urllib.parse import parse_qs, urlparse
 
 ORG_ID = "20067925477"
 TOKENS_FILENAME = "zoho_exporter.txt"
-ZOHO_BASE_URL = "https://desk.zoho.com"
+ZOHO_BASE_URL = "https://desk.zoho.eu"
 IMG_TAG_PATTERN = re.compile(r"<img\b(?=[^>]*\bsrc\s*=)[^>]*>", re.IGNORECASE)
 SRC_ATTR_PATTERN = re.compile(r"\bsrc\s*=\s*(?:(?P<quote>[\"'])(?P<quoted>[^\"']+)(?P=quote)|(?P<unquoted>[^\s>]+))", re.IGNORECASE)
 
