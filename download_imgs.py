@@ -10,11 +10,9 @@ from pathlib import Path
 
 
 TOKEN_URL = "https://accounts.zoho.eu/oauth/v2/token"
-TICKETS_URL = "https://desk.zoho.eu/api/v1/tickets"
 CONFIG_FILENAME = "zoho_exporter.ini"
 CONFIG_SECTION = "zoho"
 TOKENS_FILENAME = "tokens.txt"
-TICKETS_FILENAME = "tickets.json"
 ORG_ID = "20067925477"
 
 
@@ -54,46 +52,6 @@ def save_tokens(token_data: dict) -> None:
     token_file = Path(TOKENS_FILENAME)
     token_file.write_text(
         f"access_token={access_token}\nrefresh_token={refresh_token}\n",
-        encoding="utf-8",
-    )
-
-
-def fetch_tickets(access_token: str) -> dict | list:
-    """Fetch all tickets from Zoho Desk."""
-    request = urllib.request.Request(
-        TICKETS_URL,
-        headers={
-            "orgId": ORG_ID,
-            "Authorization": f"Zoho-oauthtoken {access_token}",
-        },
-        method="GET",
-    )
-
-    try:
-        with urllib.request.urlopen(request) as response:
-            response_body = response.read().decode("utf-8")
-    except urllib.error.HTTPError as exc:
-        error_body = exc.read().decode("utf-8", errors="replace")
-        print(f"Tickets request failed with HTTP {exc.code}")
-        print(error_body)
-        sys.exit(1)
-    except urllib.error.URLError as exc:
-        print(f"Tickets request failed: {exc}")
-        sys.exit(1)
-
-    try:
-        return json.loads(response_body)
-    except json.JSONDecodeError:
-        print("Tickets request succeeded but response was not valid JSON:")
-        print(response_body)
-        sys.exit(1)
-
-
-def save_tickets(tickets_data: dict | list) -> None:
-    """Save tickets response to pretty-printed JSON file."""
-    tickets_file = Path(TICKETS_FILENAME)
-    tickets_file.write_text(
-        json.dumps(tickets_data, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
 
@@ -146,13 +104,6 @@ def main():
     print(f"\nSaved tokens to {TOKENS_FILENAME}")
 
     access_token = token_data.get("access_token", "")
-    if not access_token:
-        print("Cannot fetch tickets because access_token is missing from the token response.")
-        sys.exit(1)
-
-    tickets_data = fetch_tickets(access_token)
-    save_tickets(tickets_data)
-    print(f"Saved tickets to {TICKETS_FILENAME}")
 
 
 if __name__ == "__main__":
