@@ -3,6 +3,7 @@ zoho_exporter.ini
 data/
 output/
 tst/
+rez/
 
 __pycache__/
 *.pyc
