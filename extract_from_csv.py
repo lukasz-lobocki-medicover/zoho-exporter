@@ -121,6 +121,8 @@ def process_csv_html(args, input_file):
     """Process CSV file and extract thread content to HTML files."""
     input_file = Path(input_file)
     output_path, html_path = create_directories(args.output_dir, "html")
+    html_path = html_path / input_file.stem
+    html_path.mkdir(parents=True, exist_ok=True)
     
     # Verify input file exists
     if not input_file.exists():
@@ -146,6 +148,7 @@ def process_csv_html(args, input_file):
     
     print(f"Processing CSV file: {input_file}")
     print(f"Output directory: {output_path}")
+    print(f"HTML sidecar directory: {html_path}")
     print(f"Mode: HTML extraction")
     
     try:
@@ -205,7 +208,7 @@ def process_csv_html(args, input_file):
                     thread_content=str(thread_content) if thread_content is not None else ""
                 )
                 
-                # Save HTML file directly under the html output directory
+                # Save HTML file under a CSV-specific subdirectory
                 html_filename = f"{thread_id_str}.html"
                 html_filepath = html_path / html_filename
                 
@@ -214,7 +217,7 @@ def process_csv_html(args, input_file):
                 
                 # Add to manifest
                 manifest[thread_id_str] = {
-                    "html_path": f"html/{html_filename}",
+                    "html_path": f"html/{input_file.stem}/{html_filename}",
                     "Ticket id": ticket_id_str,
                 }
                 
