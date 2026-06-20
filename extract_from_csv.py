@@ -180,16 +180,21 @@ def process_csv_html(args):
                     thread_content=str(thread_content) if thread_content is not None else ""
                 )
                 
+                # Determine subfolder (every 10,000 files: '01', '02', '03', ...)
+                subfolder = f"{processed_rows // 10000 + 1:02d}"
+                subfolder_path = html_path / subfolder
+                subfolder_path.mkdir(exist_ok=True)
+
                 # Save HTML file
                 html_filename = f"{thread_id_str}.html"
-                html_filepath = html_path / html_filename
+                html_filepath = subfolder_path / html_filename
                 
                 with open(html_filepath, 'w', encoding='utf-8') as f:
                     f.write(html_content)
                 
                 # Add to manifest
                 manifest[thread_id_str] = {
-                    "html_path": f"html/{html_filename}",
+                    "html_path": f"html/{subfolder}/{html_filename}",
                     "Ticket id": ticket_id_str,
                 }
                 
