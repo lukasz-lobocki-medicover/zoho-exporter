@@ -23,8 +23,8 @@ from urllib.parse import urlparse
 
 ORG_ID = "20067925477"
 TOKENS_FILENAME = "zoho_exporter.txt"
-IMG_TAG_PATTERN = re.compile(r"<img\b[^>]*\bsrc\s*=\s*([\"'])([^\"']+)\1[^>]*>", re.IGNORECASE)
-SRC_ATTR_PATTERN = re.compile(r"\bsrc\s*=\s*([\"'])([^\"']+)\1", re.IGNORECASE)
+IMG_TAG_PATTERN = re.compile(r"<img\b(?=[^>]*\bsrc\s*=)[^>]*>", re.IGNORECASE)
+SRC_ATTR_PATTERN = re.compile(r"\bsrc\s*=\s*(?:(?P<quote>[\"'])(?P<quoted>[^\"']+) (?P=quote)|(?P<unquoted>[^\s>]+))", re.IGNORECASE)
 
 
 def load_access_token() -> str:
@@ -100,7 +100,12 @@ def process_html_file(html_file: Path, access_token: str) -> int:
     def replace_img(img_match: re.Match) -> str:
         nonlocal updated, found
         tag = img_match.group(0)
-        src_url = img_match.group(2)
+        src_match = SRC_ATTR_PATTERN.search(tag)
+        if not src_match:
+            logging.warning("Matched <img> tag without replaceable src in %s: %s", html_file, tag)
+            return tag
+
+        src_url = src_match.group("quoted") or src_match.group("unquoted") or ""
         found += 1
         logging.debug("Found <img> src in %s: %s", html_file, src_url)
 
@@ -117,13 +122,8 @@ def process_html_file(html_file: Path, access_token: str) -> int:
             if not download_image(src_url, dest, access_token):
                 return tag
 
-        src_match = SRC_ATTR_PATTERN.search(tag)
-        if not src_match:
-            logging.warning("Matched <img> tag without replaceable src in %s: %s", html_file, tag)
-            return tag
-
         rel = dest.relative_to(html_file.parent).as_posix()
-        new_tag = tag[: src_match.start(2)] + rel + tag[src_match.end(2):]
+        new_tag = tag[: src_match.start()] + f'src="{rel}"' + tag[src_match.end():]
         updated += 1
         return new_tag
 
