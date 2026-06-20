@@ -37,8 +37,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 """
 
 # Default column names
-DEFAULT_ID_COLUMN = "ID"
-DEFAULT_CONTENT_COLUMN = "Thread Content"
+DEFAULT_ID_COLUMN = "id"
+DEFAULT_CONTENT_COLUMN = "summary"
 
 # Output directories
 DEFAULT_OUTPUT_DIR = Path("output")
@@ -134,6 +134,7 @@ def process_csv_html(args, input_file):
     try:
         # Open and read CSV file
         with open(input_file, 'r', encoding='utf-8', errors='replace', newline='') as csvfile:
+            next(csvfile)  # skip first line
             reader = csv.DictReader(csvfile, quotechar='"', delimiter=',')
             
             # Check if required columns exist
@@ -258,6 +259,7 @@ def process_csv_json(args, input_file):
     try:
         # Open and read CSV file
         with open(input_file, 'r', encoding='utf-8', errors='replace', newline='') as csvfile:
+            next(csvfile)  # skip first line
             reader = csv.DictReader(csvfile, quotechar='"', delimiter=',')
             
             # Check if content column exists

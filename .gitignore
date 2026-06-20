@@ -1,2 +1,5 @@
 zoho_exporter.txt
 zoho_exporter.ini
+
+__pycache__/
+*.pyc
