@@ -21,7 +21,7 @@ This script processes large CSV files (designed for 3M+ rows, 400MB+) and can ei
 ## Usage
 
 ```bash
-python extract_to_html.py [options]
+python extract_from_csv.py [options]
 ```
 
 ### Options
@@ -37,16 +37,16 @@ python extract_to_html.py [options]
 
 ```bash
 # HTML mode: Extract thread content to HTML files
-python extract_to_html.py
+python extract_from_csv.py
 
 # JSON mode: Transform CSV to JSON (excluding content column)
-python extract_to_html.py --mode json --output-dir json_output
+python extract_from_csv.py --mode json --output-dir json_output
 
 # Process custom file in HTML mode
-python extract_to_html.py --input data/my_data.csv --output-dir results
+python extract_from_csv.py --input data/my_data.csv --output-dir results
 
 # Use different column names
-python extract_to_html.py --id-column id --content-column content
+python extract_from_csv.py --id-column id --content-column content
 ```
 
 ## Output Structure

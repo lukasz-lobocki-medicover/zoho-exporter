@@ -10,10 +10,10 @@ It's designed to handle CSV files with 3M+ rows efficiently using built-in Pytho
 
 Usage:
     # Extract thread content to HTML
-    python extract_to_html.py [--input FILE] [--output-dir DIR] [--id-column NAME] [--content-column NAME]
+    python extract_from_csv.py [--input FILE] [--output-dir DIR] [--id-column NAME] [--content-column NAME]
 
     # Transform to JSON (excluding content column)
-    python extract_to_html.py --mode json [--input FILE] [--output-dir DIR] [--content-column NAME]
+    python extract_from_csv.py --mode json [--input FILE] [--output-dir DIR] [--content-column NAME]
 """
 
 import argparse
